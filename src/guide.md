@@ -131,17 +131,207 @@ marconi
 
 ### Source Organization
 
+It's fairly common to have the primary source directory named after
+the project itself. This comes with the bonus of avoiding module
+collisions for free if you choose to upload your pacakge to
+[PyPI](https://pypi.python.org/pypi).
 
+Inside each source folder, be sure to include an
+```__init__.py```. Even if the file is empty, it controls whether
+python 2.7 - 3.2 recognize the given directory as a module. Starting
+with Python 3.3, this is no longer necessary. This ```__init__.py```
+can also be used to trigger import-time side-effects.
+
+For example, in marconi.queues.storage:
+
+```python
+# marconi/queues/storage/__init__.py
+"""Marconi Storage Drivers"""
+
+from marconi.queues.storage import base
+from marconi.queues.storage import errors  # NOQA
+
+# Hoist classes into package namespace
+ControlDriverBase = base.ControlDriverBase
+DataDriverBase = base.DataDriverBase
+CatalogueBase = base.CatalogueBase
+Claim = base.Claim
+Message = base.Message
+Queue = base.Queue
+ShardsBase = base.ShardsBase
+```
+
+This makes it so if someone imports ```marconi.queues.storage``` into
+their module, the chosen names from the sub-modules become available.
+
+This is mostly a convenience to users. Best practices to keep in mind:
+
+* Avoid modifying global state using import-time side-effects
+* Consider hoisting certain names as a convenience to users
+
+\pagebreak
 
 ### Test Organization
 
+It's great to start organizing your tests early on. A frequently used
+approach to this is:
+
+* ```unit```: tests that avoid/mock network/disk I/O and randomness
+    * The primary goal of unit testing is to be your "compiler" - can my code run?
+    * Can also serve to verify properties of [pure](http://en.wikipedia.org/wiki/Pure_function) functions
+* ```functional```: tests that perform network/disk I/O
+    * Primary goal: verify operating correctness of your system
+
+We'll dive a little deeper into the python testing ecosystem
+[later](#python-testing).
+
 ### Documentation Organization
+
+There's a great deal of information on how to write great
+documentation. To be honest, as of this moment, I have close to zero
+experience generating documentation for Python projects.
+
+I refer you to the
+[python-requests](https://github.com/kennethreitz/requests)
+[docs](http://docs.python-requests.org/en/latest/) for an example of
+well-written documentation, and to the python-requests
+[src](https://github.com/kennethreitz/requests/tree/master/docs) for
+how to structure your docs.
 
 ### Configuration Files
 
+If you're developing a Python service, it's likely that you'll need to
+expose some configuration files. My experiences lie mostly within the
+realm of
+[oslo.config](http://docs.openstack.org/developer/oslo.config/), so
+the advice I give here comes from that. Given that, the advice given
+below can be generalized to different, effective configuration
+strategies.
+
+\pagebreak
+
+[oslo.config](http://docs.openstack.org/developer/oslo.config/) by
+default searches for configuration files in four directories:
+
+```
+~/.${project}/
+~/
+/etc/${project}/
+/etc/
+```
+
+The ```project``` is determined by how the configuration is
+instantiated for your project. For example, in Openstack Marconi, this
+is accomplished as follows:
+
+```python
+from oslo.config import cfg
+
+from marconi.queues import bootstrap
+
+conf = cfg.CONF
+conf(project='marconi', prog='marconi-queues', args=[])
+
+app = bootstrap.Bootstrap(conf).transport.ap
+```
+
+Because of ```project='marconi'```, oslo.config will search for
+configuration information in:
+
+```
+~/.marconi/
+~/
+/etc/marconi/
+/etc/
+```
+
+\pagebreak
+
+Configuration options are declared by placing some global declarations
+in a python file. For example, the base storage options for Marconi
+have the following configurations options defined:
+
+```python
+# marconi.queues.storage.base
+_LIMITS_OPTIONS = [
+    cfg.IntOpt('default_queue_paging', default=10,
+               help='Default queue pagination size'),
+    cfg.IntOpt('default_message_paging', default=10,
+               help='Default message pagination size')
+]
+
+_LIMITS_GROUP = 'limits:storage'
+```
+
+In order to make them available for use throughout the project, they
+must be registered. This is done as follows:
+
+```python
+# marconi.queues.storage.base
+class DataDriverBase(DriverBase):
+
+    def __init__(self, conf, cache):
+        super(DataDriverBase, self).__init__(conf, cache)
+
+        self.conf.register_opts(_LIMITS_OPTIONS, group=_LIMITS_GROUP)
+        self.limits_conf = self.conf[_LIMITS_GROUP]
+```
+
+The act of ```DataDriverBase``` calling ```register_opts``` achieves
+configuration registration. The ```group``` controls the
+section. It'll correspond to ```[limits:storage]``` in the final
+configuration file.
+
+\pagebreak
+
+Some best practices to keep in mind:
+
+* Declare configuration options in the file that it relates to the most
+* Assign reasonable types to your config options
+    * An ```int``` probably doesn't make sense for an IP address, for
+      example
+* Register your configuration options during the initialization of a
+  resource
+* Avoid global configuration objects as much as possible
+    * Passing it around as a function argument allows for more
+      testable code
+
 ### Binaries/Scripts
 
+Some Python projects install with binaries or scripts. For example,
+the [flake8](http://flake8.readthedocs.org/en/latest/) static analyzer
+is mostly a script.
+
+It's wise to bundle most of the logic as modules, then import what's
+needed and provide that as the script, especially for larger
+projects. The logic would be kept in the ```{project}``` directory and
+the script would be kept in ```bin/{script}```.
+
+In order to specify that a script be installed along with the library
+code for your project, specify it as follows in the ```setup.cfg```:
+
+```ini
+[entry_points]
+console_scripts =
+    marconi-server = marconi.cmd.server:run
+```
+
+The name on the left-hand side will be the name given to the
+executable when it is installed. The right-hand side corresponds to
+the module search path followed by the function to run in that module.
+
 ### Other Files
+
+There's a few more files to keep in mind when working with Python
+projects. Not all projects will have all of the files listed below,
+but it's good to be aware of them:
+
+* setup.py: used by package manager - installation metadata/instructions
+* setup.cfg: new-style installation metadata/instructions
+* tox.ini: for use with [tox](#tox) - easy, multi-env testing
+* MANIFIEST.in: gives instructions to include files at install time
+* requirements.txt: list of dependencies for using your package
+* test-requirements.txt: list of dependencies for testing
 
 ## Packaging {#packaging}
 
@@ -304,6 +494,8 @@ mostly composable, but will not be covered here.
 #### Core and Regular Reviewers {#openstack-reviewers}
 
 #### On Style {#openstack-hacking}
+
+\pagebreak
 
 ## Useful Resources
 
