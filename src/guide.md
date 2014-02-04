@@ -61,11 +61,34 @@ Openstack. The time you spend with Openstack will help you understand
 how Python works in large projects, and how to collaborate with
 others.
 
+### You
+
+This guide assumes that you've at least dabbled with Python before. If
+you can load up an interpreter and define some functions, you're
+probably good to go.
+
+I also assume you've worked with a command line before. If you can
+navigate around with ```cd```, ```ls```, and more, you're probably
+good in this area.
+
+### Contributing
+
 Enjoy the guide! Reach out to me at
-[@cppcabrera](http://twitter.com/cppcabrera) or on freenode:alcabrera
-if you'd like to improve this guide.
+@[cppcabrera](http://twitter.com/cppcabrera) or on freenode:alcabrera
+if you'd like to give feedback, or fork away and send
+[pull requests](https://github.com/cabrera/python-openstack-and-you)!
+
+\newpage
 
 ## Project Structure {#structure}
+
+After you've worked on Python for some time, certain patterns about
+project management start to become intuitive. This section hopes to
+distill that intuition.
+
+Python projects usually consist of several common files. Below is a
+```tree```-listing of the
+[Openstack Marconi](https://github.com/openstack/marconi) project.
 
 ### High-Level View
 
@@ -107,6 +130,8 @@ marconi
 \pagebreak
 
 ### Source Organization
+
+
 
 ### Test Organization
 
