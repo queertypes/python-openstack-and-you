@@ -19,8 +19,13 @@ $ cabal install pandoc
 If you have a LaTeX environment set up, you can do the following to produce a PDF:
 
 ```bash
-$ pandoc src/guide.md -o guide.pdf
+$ cd src
+$ pandoc --toc guide.md -o guide.pdf
 ```
+
+The ```---toc``` flag generates a table of contents. This may be
+omitted, as the Table of Contents is still embedded in the metadata
+for the guide, thanks to pandoc magic.
 
 ### Other Formats
 
@@ -29,7 +34,7 @@ pandoc supports an amazing number of
 generally:
 
 ```bash
-$ pandoc src/guide.md -o guide.<format>
+$ pandoc --toc guide.md -o guide.<format>
 ```
 
 ## License
