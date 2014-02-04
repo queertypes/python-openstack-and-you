@@ -2,6 +2,36 @@
 
 A guide to the Python and Openstack development ecosystems. (WIP!)
 
+## Build
+
+This project uses [pandoc](http://johnmacfarlane.net/pandoc/) for
+generating the guide. You can either use your distribution's package
+manager to install pandoc directly, or you can install
+[haskell-platform](http://www.haskell.org/platform/) and then:
+
+```bash
+$ cabal update
+$ cabal install pandoc
+```
+
+### PDF
+
+If you have a LaTeX environment set up, you can do the following to produce a PDF:
+
+```bash
+$ pandoc src/guide.md -o guide.pdf
+```
+
+### Other Formats
+
+pandoc supports an amazing number of
+[formats](http://johnmacfarlane.net/pandoc/). The build process is
+generally:
+
+```bash
+$ pandoc src/guide.md -o guide.<format>
+```
+
 ## License
 
 ![](http://i.creativecommons.org/l/by-sa/4.0/88x31.png)
