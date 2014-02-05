@@ -477,29 +477,135 @@ mostly composable, but will not be covered here.
 
 ## Supporting Python 2.6, 2.7, 3.3 and Beyond {#python2-to-3}
 
+Python 2 and Python 3 are rather different beasts. For example, in
+Python 2, ```print``` is a statement, whereas in Python 3, it is a
+function.
+
+This section will guide you through the process of getting your
+project to be compatible with Python 3, while maintaining Python
+2.6/2.7 support.
+
 ### From \_\_future\_\_ Import {#future}
+
+```__future__``` imports are a convenient mechanism for exposing
+back-ported features to older Python versions. Some that are
+particularly interesting for maintaining 2/3 compatibility are:
+
+* [print function](#print-function)
+* [unicode literals](#unicode-literals)
+* [true division](#float-div)
+* [absolute imports](#absolute-imports)
+
+A ```__future__``` import must come before any other import.
 
 #### Print is a Function {#print-function}
 
-#### Unicode Literals {#unicode-literals}
+
+```python
+# Python 2
+print >> sys.stderr, "My", "data"
+
+# Python 3
+print('My', 'data', file=sys.stderr)
+
+# Compatible approach:
+from __future__ import print_function
+print('My', 'data', file=sys.stderr)
+```
+
+#### Unicode Literals {#unicode-literals}  
+\  
+
+String-like data handling is one of the most common causes of
+incompatibilities between Python 2 and 3.
+
+In Python 2, there are at least three types of strings: ```bytes```,
+```str```, and ```unicode```. In Python 3, there are only ```bytes```
+and ```str```. The ```str``` exposed by Python 3 is mostly equivalent
+to the Python 2 ```unicode``` type. Python 2's ```str```-type is the
+odd one out going between versions. In short:
+
++----------+----------------+
+| Python 2 |    Python 3    |
++==========+================+
+| str      | (almost) bytes |
++----------+----------------+
+| unicode  | str            |
++----------+----------------+
+| bytes    | bytes          |
++----------+----------------+
+
+Table: Strings in Python 2 vs. Python 3
+
+When using the ```unicode_literals``` future import, it makes it so
+that string literals occurring in Python 2 source is treated as
+unicode string.
+
+For example, in Python 2:
+
+```python
+>>> type('aa'), type(u'aa'), type(b'aa')
+(<type 'str'>, <type 'unicode'>, <type 'str'>)
+>>> from __future__ import unicode_literals
+>>> type('aa'), type(u'aa'), type(b'aa')
+(<type 'unicode'>, <type 'unicode'>, <type 'str'>)
+```
+
+In Python 3:
+
+```python
+>>> type('aa'), type(u'aa'), type(b'aa')
+(<class 'str'>, <class 'str'>, <class 'bytes'>)
+>>> from __future__ import unicode_literals
+>>> type('aa'), type(u'aa'), type(b'aa')
+(<type 'str'>, <type 'str'>, <type 'bytes'>)
+```
+
+To mostly unify the way string literals are handled between Python 2
+and 3, use the ```unicode_literals``` import.
 
 #### Division is Floating Point by Default {#float-div}
 
+```python
+# Python 2
+>>> 2 / 3, 2 // 3, 2.0 / 3, 2.0 // 3
+(0, 0, 0.6666666666666666, 0.0)
+# Python 3
+>>> 2 / 3, 2 // 3, 2.0 / 3, 2.0 // 3
+(0.6666666666666666, 0, 0.6666666666666666, 0.0)
+
+# Compatible approach
+from __future__ import division
+>>> 2 / 3, 2 // 3, 2.0 / 3, 2.0 // 3
+(0.6666666666666666, 0, 0.6666666666666666, 0.0)
+```
+
 #### New Exception-Handling Syntax {#exceptions}
 
-### Python 3 Backports {#py3-backports}
+```python
+# Python < 2.6
+try:
+    thing()
+except (Exception, RuntimeError), e:
+    print(e)
+# Python >= 2.6
+try:
+    thing()
+except (Exception, RuntimeError) as e:
+    print(e)
+```
 
-#### Enums
+Since we're trying to support Python >= 2.6, it makes sense to take
+advantage of the ```as``` syntax. In fact, the old syntax causes a
+syntax error in Python 3!
 
-#### Concurrent.Futures
+#### Absolute Imports
 
-### Only in Python 3 {#py3-specific}
 
-#### yield from
-
-####
 
 ### Checking Whether Your Code Runs on Python 3 {#my-py3}
+
+
 
 ### Checking Whether a Dependency Runs on Python 3 {#dep-py3}
 
@@ -559,6 +665,30 @@ mostly composable, but will not be covered here.
 
 * jython
 * ironpython
+
+## Web Development
+
+### WSGI
+
+### WSGI Servers
+
+#### Hello, WSGI
+
+```python
+def app(env, start_response):
+    start_response('200 OK', [])
+    return [b'Hello, world!']
+```
+
+### WSGI Frameworks
+
+Links to various frameworks:
+
+*
+
+#### Hello, Falcon
+
+### WSGI Tools
 
 ## Welcome to Openstack {#openstack}
 
