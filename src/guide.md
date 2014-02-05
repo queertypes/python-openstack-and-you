@@ -133,7 +133,7 @@ marconi
 
 It's fairly common to have the primary source directory named after
 the project itself. This comes with the bonus of avoiding module
-collisions for free if you choose to upload your pacakge to
+collisions for free if you choose to upload your package to
 [PyPI](https://pypi.python.org/pypi).
 
 Inside each source folder, be sure to include an
@@ -335,21 +335,94 @@ but it's good to be aware of them:
 
 ## Packaging {#packaging}
 
+The Python packaging ecosystem is wide and diverse. With no less than
+three formats in use at the moment (egg, wheel, pex), it's easy to get
+confused.
+
+This section aims to provide you with the knowledge you need to create
+and upload your own python package to the Python Package Index
+(PyPI). Note that this subject has already been covered in detail by
+the excellent
+[Hitchiker's Guide to Python](http://docs.python-guide.org/en/latest/shipping/packaging/).
+
+What this guide adds is an introduction to
+[Python Build Reasonableness](https://github.com/openstack-dev/pbr)
+(pbr), which is in active use within the openstack ecosystem. It aims
+to unify the previous existing differences between setuptools and
+distribute.
+
 ### Tools {#tools}
+
+A few tools make interacting with the Python packaging ecosystem quite
+pleasant. In particular, take note of:
+
+* [pbr](#pbr)
+* [pip](#pip)
+* [twine](#twine)
+
+Each is introduced in detail below. The short version:
+
+* pip allows you to [un]install packages
+* pbr unifies the package metadata format
+* twine makes uploading to PyPI safer
 
 #### Pip: One-stop Shop for Python Module Installation {#pip}
 
-#### A Tale of Two Python Packaging Branches {#setuptools-distutils}
+[pip](http://www.pip-installer.org/en/latest/) is to
+[python](http://python.org/) as [gem](http://rubygems.org/) is to
+[ruby](https://www.ruby-lang.org/en/), [npm](https://npmjs.org/) is to
+[node](http://nodejs.org/)/javascript,
+[cabal](http://www.haskell.org/cabal/) is to
+[haskell](http://www.haskell.org/haskellwiki/Haskell), and so on.
 
-### Package Formats {#formats}
+With a single command, you can...
 
-#### Eggs {#eggs}
+* install a package: ```pip install redis```
+* uninstall a package: ```pip uninstall redis```
+* show what packages are installed: ```pip freeze```
+* upgrade a package: ```pip install --upgrade redis```
+* upgrade pip: ```pip install --upgrade pip```
 
-#### Wheels {#wheels}
+pip accomplishes all of this by searching
+[PyPI](https://pypi.python.org/) for a package with the name you gave
+it. Having found the package by name, it will install it. This looks
+like:
+
+```bash
+$ pip install pep8
+Downloading/unpacking pep8
+  Downloading pep8-1.4.6.tar.gz (65kB): 65kB downloaded
+  Running setup.py egg_info for package pep8
+
+    no previously-included directories found matching 'docs/_build'
+Installing collected packages: pep8
+  Running setup.py install for pep8
+
+    no previously-included directories found matching 'docs/_build'
+    Installing pep8 script to /home/alejandro/.venv/27/bin
+Successfully installed pep8
+Cleaning up...
+```
+
+pip depends on the presence of a setup.py in order to works its
+magic. setup.py is the package metadata and includes information like:
+
+* who is the author of this package?
+* what license does it use?
+* what dependencies does the package have?
+
+Writing a setup.py always defers to an underlying packaging
+library. There are a few in circulation, including ```distutils```
+which comes with the standard library. This
+[stack overflow answer](http://stackoverflow.com/a/14753678)
+summarizes the differences between the package libraries. This guide
+advocates side-stepping the issue by making use of [pbr](#pbr).
 
 ### Make Your Own Python Package {#twine}
 
-#### Making a setup.cfg
+#### Making a setup.cfg With pbr {#pbr}
+
+#### setup.py: Another Way to Do It
 
 #### More From Your Manifest
 
@@ -362,6 +435,12 @@ but it's good to be aware of them:
 ##### Generate the Things {#pypi-dist}
 
 ##### Upload to PyPI {#pypi-upload}
+
+### Package Formats {#formats}
+
+#### Eggs {#eggs}
+
+#### Wheels {#wheels}
 
 ## Development {#developing}
 
