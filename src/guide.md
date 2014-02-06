@@ -82,8 +82,6 @@ if you'd like to give feedback, or fork away and send
 
 ## Project Structure {#structure}
 
-***
-
 After you've worked on Python for some time, certain patterns about
 project management start to become intuitive. This section hopes to
 distill that intuition.
@@ -335,6 +333,8 @@ but it's good to be aware of them:
 * requirements.txt: list of dependencies for using your package
 * test-requirements.txt: list of dependencies for testing
 
+\newpage
+
 ## Packaging {#packaging}
 
 The Python packaging ecosystem is wide and diverse. With no less than
@@ -444,19 +444,284 @@ advocates side-stepping the issue by making use of [pbr](#pbr).
 
 #### Wheels {#wheels}
 
+\newpage
+
 ## Development {#developing}
 
-### Use These
+Developing with Python is generally a pleasure. To make the most of
+the Python development ecosystem, this section will provide brief
+coverage of several tools that make your life **much** easier.
 
-* ipython
-* virtualenv
-* tox
-* pip
-* pbr
-* flake8
-* hacking
+### virtualenv {#venv}
+
+[virtualenv](http://www.virtualenv.org/en/latest/), provided as a
+built-in since
+[Python 3.3](http://docs.python.org/dev/library/venv.html), provides a
+sandbox to isolate package and binary installations.
+
+This plays exceptionally well with [pip](#pip). It makes it possible
+to develop or deploy separate applications in isolation from each
+other, especially protecting against incompatible dependencies.
+
+As an added bonus, every virtualenv that you create comes with a copy
+of [pip](#pip) preinstalled. Let's play with it!
+
+```
+# global namespace
+$ pip install virtualenv
+...
+$ virtualenv python_and_you
+New python executable in python_and_you/bin/python
+Installing Setuptools...done.
+Installing Pip..........done.
+$ . ./python_and_you/bin/activate
+(python_and_you)$ 
+```
+
+That's all it takes. You know you're in a virtualenv context by
+observing that the environment name now prefixes your terminal
+prompt. Any packages you install will go to ```./python_and_you```.
+
+The rest of this guide assumes you're working from inside a
+virtualenv. If you're developing in Python, it's a great idea to do
+**most of your work** from inside a virtualenv.
+
+If you ever want to deactivate a virtualenv: ```$ deactivate```.
+
+\newpage
+
+### IPython {#ipython}
+
+Few tools will enhance your ability to explore Python packages like
+[IPython](http://ipython.org/) will. It's a much more powerful REPL
+for python that what's normally provided. We'll be using it for its
+support of:
+
+* tab-completion/auto-completion - faster ```dir```
+* ```<name>?``` - faster ```help```
+* syntax highlighting
+* parentheses matching
+* multi-line input w/ smart indentation
+* history
+* directives like ```%timeit```
+
+Some other notable features include:
+
+* IPython [notebooks](http://ipython.org/ipython-doc/stable/interactive/notebook.html)
+* Built-in matplotlib support for plotting
+* [More](http://ipython.org/ipython-doc/stable/overview.html)
+
+Let's boot up an ipython session:
+
+```
+$ pip install ipython
+...
+$ ipython
+```
+
+```python
+Python 2.7.5 (default, Aug  8 2013, 17:09:46) 
+Type "copyright", "credits" or "license" for more information.
+
+IPython 1.1.0 -- An enhanced Interactive Python.
+?         -> Introduction and overview of IPython's features.
+%quickref -> Quick reference.
+help      -> Python's own help system.
+object?   -> Details about 'object', use 'object??' for extra details.
+
+In [1]: 
+```
+
+\newpage
+
+Let's benchmark the ```sum``` function:
+
+```python
+In [1]: %timeit sum(range(2**20))
+10 loops, best of 3: 26.2 ms per loop
+```
+
+Let's find out what lives in the urllib module:
+
+```python
+In [2]: import urllib
+
+In [3]: urllib.<tab>
+urllib.ContentTooShortError      urllib.ftpwrapper            
+urllib.FancyURLopener            urllib.getproxies            
+urllib.MAXFTPCACHE               urllib.getproxies_environment
+urllib.URLopener                 urllib.i                     
+urllib.addbase                   urllib.localhost             
+urllib.addclosehook              urllib.noheaders             
+urllib.addinfo                   urllib.os                    
+urllib.addinfourl                urllib.pathname2url          
+urllib.always_safe               urllib.proxy_bypass          
+urllib.base64                    urllib.proxy_bypass_environment
+urllib.basejoin                  urllib.quote                 
+urllib.c                         urllib.quote_plus            
+urllib.ftpcache                  urllib.re                    
+urllib.ftperrors                 urllib.reporthook            
+
+In [3]: urllib.URL<tab>
+In [3]: urllib.URLopener
+```
+
+Let's find out what this function does:
+
+```python
+In [3]: urllib.URLopener?
+Type:       classobj
+String Form:urllib.URLopener
+File:       /usr/local/lib/python2.7/urllib.py
+Docstring:
+Class to open URLs.
+This is a class rather than just a subroutine because we may need
+more than one set of global protocol-specific options.
+Note -- this is a base class for those who don't want the
+automatic handling of errors type 302 (relocated) and 401
+(authorization needed).
+Constructor information:
+ Definition:urllib.URLopener(self, proxies=None, **x509)
+```
+
+There's few tools that'll change the way you develop in
+Python. IPython is one of those tools. Use it liberally, especially
+when developing with new packages.
+
+### tox {#tox}
+
+[tox](http://tox.readthedocs.org/en/latest/) makes testing of multiple
+python versions manageable. Internally, it uses [pip](#pip) and
+[virtualenv](#virtualenv) to work its magic.
+
+A ```tox.ini``` configuration file explains to tox how to:
+
+* run your unit tests
+* install your dependencies
+* for all environments
+
+Here's an example ```tox.ini```:
+
+```ini
+[tox]
+envlist = py26, py27, py33, pypy
+
+[testenv]
+deps = -r{toxinidir}/test-requirements.txt
+       -r{toxinidir}/requirements.txt
+commands = nosetests -s tests/unit
+
+[testenv:functional]
+commands = nosetests -s tests/functional
+
+[testenv:pep8]
+deps = flake8
+commands = flake8 httpretty tests
+
+[testenv:lint2]
+basepython = python2
+deps = pylint
+commands = pylint -E httpretty tests
+
+[testenv:lint3]
+basepython = python3
+deps = pylint
+commands = pylint -E httpretty tests
+```
+
+\newpage
+
+Now, let's install it and play with it:
+
+```
+$ pip install tox
+...
+$ tox -e pep8
+GLOB sdist-make: ...
+pep8 create: ...
+pep8 installdeps: flake8
+pep8 inst: ...
+pep8 runtests: commands[0] | flake8 httpretty tests
+# flake8 output
+$ tox -e pep8
+GLOB sdist-make: ...
+pep8 inst-nodeps: ...
+pep8 runtests: commands[0] | flake8 httpretty tests
+# environments are preserved unless deps change
+$ tox -e py33
+GLOB sdist-make: ...
+py33 create: ...
+py33 installdeps: ...
+# python3.3 unit tests - assumes python3.3 is installed on your system
+```
+
+Any project that is looking to support Python 2.6 - Python 3.4 in a
+single codebase, and possibly even [alternative](#interpreters) Python
+interpreters should use tox. It even connects nicely with
+[TravisCI](http://docs.python-guide.org/en/latest/scenarios/ci/#travis-ci)!
+
+### Static Analysis
+
+Python is a dynamic language. The primary downside of this is that
+silly errors won't be detected until run-time. Therefore, even simple
+static analysis can be your best friend.
+
+The trifecta of static analysis in Python is the combination of:
+
+* pep8
+* pyflakes
 * pylint
-* nosetests
+
+pep8 ensures your code meets the style guidelines detailed in
+[PEP 8](http://www.python.org/dev/peps/pep-0008/). It is thorough,
+even going so far as to complain about line lengths (< 80). Since
+indentation matters in Python, it's wise to listen to pep8 and keep
+your code free of pep8 violations. Remember: ```Readability
+counts.```.
+
+\newpage
+
+pyflakes goes a step further than pep8. It performs really simple
+static analysis, catching things like:
+
+* unused module imports
+* module imported names shadowed by local names
+* future imports brought in after other imports
+* syntax errors
+* redefinition of used names in local namespace
+* undefined name used
+* duplicate function argument names
+* local variable assigned but never used
+
+The [flake8](https://flake8.readthedocs.org/en/2.0/) package combines
+the two into one. For even stricter checks, which are required in the
+[openstack](#openstack) ecosystem, also consider installing the
+[hacking](https://github.com/openstack-dev/hacking) package.
+
+Finally, there's [pylint](http://www.pylint.org/). pylint is a
+double-edged sword. It tries to go **really** deep in the analysis of
+your Python code. In this process, it's likely to turn up many false
+positives.
+
+There's a way to use pylint very effectively, however. Run it using
+```pylint -E```. This makes it complain only about things that are
+definitely errors.
+
+Hook these into [tox](#tox) as soon as you can and keep your Python
+project healthy!
+
+### Other Development Considerations
+
+Here's some quick advice:
+
+* Find an editor that at least supports:
+    * smart indentation
+    * syntax highlighting
+* Use the REPL in parallel w/ an editor
+    * little experiments => fail fast => learn faster
+* Work in a virtualenv as often as you can
+
+\pagebreak
 
 ### Python Language Features: Not Covered Here
 
@@ -464,18 +729,24 @@ Python is an extremely expressive language. In the interest of
 brevity, know that the things listed below are powerful, flexible, and
 mostly composable, but will not be covered here.
 
-* basics: operators, syntax, etc.
-* (list, set, dict) comprehensions
-* generators
-* iteration
-* decorators
-* context managers
-* function argument passing techniques (a, b, *args, **kwargs)
+* [basics](http://docs.python.org/3/tutorial/index.html): operators, syntax, etc.
+
+* ([list](http://docs.python.org/2/tutorial/datastructures.html#list-comprehensions),
+  [set](http://docs.python.org/2/tutorial/datastructures.html#sets),
+  [dict](http://docs.python.org/2/tutorial/datastructures.html#dictionaries))
+  comprehensions
+* [generators](http://docs.python.org/2/howto/functional.html#generator-expressions-and-list-comprehensions)
+* [iteration](http://pyvideo.org/video/1758)
+* [decorators](http://www.jeffknupp.com/blog/2013/11/29/improve-your-python-decorators-explained/)
+* [context managers](http://jessenoller.com/blog/2009/02/03/get-with-the-program-as-contextmanager-completely-different)
+* [function argument passing techniques](http://docs.python.org/2/tutorial/controlflow.html#more-on-defining-functions) (a, b, *args, **kwargs)
 * deconstructing assignments (```a, b, c = (1, 2, 3)```)
     * ...and the py3k variant: ```a, *b, c = range(10)```
-* python 3 annotations
-* exception handling
-* docstrings
+* [python 3 annotations](http://www.python.org/dev/peps/pep-3107/)
+* [exception handling](http://docs.python.org/3/tutorial/errors.html)
+* [docstrings](http://packages.python.org/an_example_pypi_project/sphinx.html#full-code-example)
+
+\newpage
 
 ## Supporting Python 2.6, 2.7, 3.3 and Beyond {#python2-to-3}
 
@@ -617,9 +888,11 @@ syntax error in Python 3!
     * step 3: does its unit tests pass?
     * step 4: when plugged into your code, do your unit tests pass?
 
-\pagebreak
+\newpage
 
 ## Testing {#python-testing}
+
+\newpage
 
 ## Libraries {#libs}
 
@@ -657,6 +930,8 @@ syntax error in Python 3!
     * logging
 * pecan
 
+\newpage
+
 ## Interpreters {#interpreters}
 
 ### CPython {#cpython}
@@ -667,6 +942,8 @@ syntax error in Python 3!
 
 * jython
 * ironpython
+
+\newpage
 
 ## Web Development
 
@@ -959,6 +1236,8 @@ into detail in this guide. The takeaway is:
 Using a WSGI framework makes it much easier to grow your web
 application. Best practice here: use a WSGI framework.
 
+\pagebreak
+
 #### WSGI Middleware
 
 \  
@@ -1004,6 +1283,8 @@ app.add_route('/', HelloResource(1))
 app = wraps(app)
 ```
 
+\pagebreak
+
 This gives our WSGI app the ability to "log" the x-project-id sent
 with a request. Let's give it a try:
 
@@ -1025,6 +1306,8 @@ The key takeaway here:
 * Think of middleware as function composition
     * Each layer can add a new feature to your application w/o tight coupling
 
+\newpage
+
 ## Welcome to Openstack {#openstack}
 
 ### Contributing Overview {#openstack-overview}
@@ -1039,7 +1322,7 @@ The key takeaway here:
 
 #### On Style {#openstack-hacking}
 
-\pagebreak
+\newpage
 
 ## Useful Resources
 
