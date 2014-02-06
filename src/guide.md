@@ -82,6 +82,8 @@ if you'd like to give feedback, or fork away and send
 
 ## Project Structure {#structure}
 
+***
+
 After you've worked on Python for some time, certain patterns about
 project management start to become intuitive. This section hopes to
 distill that intuition.
@@ -670,25 +672,358 @@ syntax error in Python 3!
 
 ### WSGI
 
+WSGI is the Web Server Gateway Interface. It makes it possible to
+write a web application in Python that can be run on a WSGI server of
+your choice. A WSGI application receives HTTP requests and yields HTTP
+responses.
+
+This section will cover:
+
+* The basics of WSGI
+* How to deploy a ```Hello, World``` WSGI application
+* How to use a WSGI framework to provide routing, etc.
+
 ### WSGI Servers
+
+A WSGI server implements the WSGI
+[specification](http://www.python.org/dev/peps/pep-3333/) and can run
+your Python code as a WSGI application.
+
+Some examples of WSGI servers include:
+
+* [gunicorn](http://gunicorn.org/)
+* [uwsgi](http://uwsgi-docs.readthedocs.org/en/latest/)
+* [chaussette](https://chaussette.readthedocs.org/en/1.0/)
+* stdlib: [wsgiref](http://docs.python.org/2/library/wsgiref.html)
+
+I'll be using gunicorn for deployment examples in this section. Let's
+install it now:
+
+```bash
+$ pip install gunicorn
+```
+
+While we're at it, let's bring in the excellent
+[HTTPie](https://github.com/jkbr/httpie) tool in, as well, to help us
+tinker with our apps.
+
+```bash
+$ pip install httpie
+```
 
 #### Hello, WSGI
 
 ```python
+# hello.py
 def app(env, start_response):
     start_response('200 OK', [])
     return [b'Hello, world!']
 ```
 
+That's it. That's the minimum WSGI application. To run it:
+
+```bash
+$ gunicorn hello:app
+2014-02-06 01:18:18 [12476] [INFO] Starting gunicorn 18.0
+2014-02-06 01:18:18 [12476] [INFO] Listening at: http://127.0.0.1:8000 (12476)
+2014-02-06 01:18:18 [12476] [INFO] Using worker: sync
+2014-02-06 01:18:18 [12481] [INFO] Booting worker with pid: 12481
+```
+
+Let's interact!
+
+```bash
+$ http get localhost:8000
+```
+
+```http
+HTTP/1.1 200 OK
+Connection: close
+Date: Thu, 06 Feb 2014 06:19:36 GMT
+Server: gunicorn/18.0
+Transfer-Encoding: chunked
+
+Hello, world!
+```
+
+### More on WSGI Applications
+
+Let's take another look at that ```Hello, world```.
+
+```python
+# hello.py
+def app(env, start_response):
+    start_response('200 OK', [])
+    return [b'Hello, world!']
+```
+
+The ```env``` is a dictionary that contains HTTP headers and
+information about the WSGI environment. ```start_response``` is a
+callback - its full signature looks like:
+
+```python
+start_response(
+    status: str,
+    response_headers: [(str, str)],
+    exc_info=None: (type, value, callback)
+)
+```
+
+* ```status``` - HTTP status, like ```200 OK```, ```404 Not Found```
+* ```response_headers``` - key:value pairs of headers, like
+  ```('content-type', 'application/json')```
+* ```exc_info``` - exception information
+
+Let's print out the ```env``` and see what's inside:
+
+```python
+# hello.py
+import pprint
+
+
+def app(env, start_response):
+    pprint.pprint(env)
+    start_response('200 OK', [])
+    return [b'Hello, world!']
+```
+
+After reloading ```gunicorn``` and issuing an ```http get
+localhost:8000```, we see on the gunicorn console log:
+
+```python
+{'HTTP_ACCEPT': '*/*',
+ 'HTTP_ACCEPT_ENCODING': 'gzip, deflate, compress',
+ 'HTTP_HOST': 'localhost:8000',
+ 'HTTP_USER_AGENT': 'HTTPie/0.6.0',
+ 'PATH_INFO': '/',
+ 'QUERY_STRING': '',
+ 'RAW_URI': '/',
+ 'REMOTE_ADDR': '127.0.0.1',
+ 'REMOTE_PORT': '33333',
+ 'REQUEST_METHOD': 'GET',
+ 'SCRIPT_NAME': '',
+ 'SERVER_NAME': 'localhost',
+ 'SERVER_PORT': '8000',
+ 'SERVER_PROTOCOL': 'HTTP/1.1',
+ 'SERVER_SOFTWARE': 'gunicorn/18.0',
+ 'gunicorn.socket': <socket._socketobject object at 0x1a9a600>,
+ 'wsgi.errors': <open file '<stderr>', mode 'w' at 0x7fe7dc7d01e0>,
+ 'wsgi.file_wrapper': <class gunicorn.http.wsgi.FileWrapper at 0x1a8a7a0>,
+ 'wsgi.input': <gunicorn.http.body.Body object at 0x1b0c050>,
+ 'wsgi.multiprocess': False,
+ 'wsgi.multithread': False,
+ 'wsgi.run_once': False,
+ 'wsgi.url_scheme': 'http',
+ 'wsgi.version': (1, 0)}
+```
+
+I won't cover most of the fields in there. The key takeaways here are:
+
+* WSGI apps are just Python programs
+* Checking out state with prints helps with understanding what's going
+  on
+* HTTP headers take the form ```HTTP_<NAME>```
+    * For example, ```X-Auth-Token``` becomes ```HTTP_X_AUTH_TOKEN```
+
 ### WSGI Frameworks
 
-Links to various frameworks:
+Frameworks give you the ability to control your WSGI application more
+easily. Most of them wrap the WSGI ```env``` in a ```Request``` object
+and allow you to respond by modifying a ```Response```
+object. Furthermore, most of them allow you to define routes.
 
-*
+Some WSGI frameworks include:
+
+* [falcon](http://falconframework.org/)
+* [pecan](http://pecanpy.org/)
+* [django](http://www.djangoproject.com/)
+* [flask](http://flask.pocoo.org/)
+
+They vary in the spectrum of tools that they provide. Some, like
+Django, are more full-stack oriented, coming with many built-ins
+including an ORM. Others, like Falcon and Flask, are minimalist, and
+provide at least ```Request``` and ```Response``` objects coupled with
+routing.
+
+We'll be using Falcon in the following example. Let's get that installed:
+
+```bash
+$ pip install falcon
+```
 
 #### Hello, Falcon
 
-### WSGI Tools
+```python
+# hello_falcon.py
+from __future__ import print_function
+import falcon
+
+
+class HelloResource(object):
+    def __init__(self, arg):
+        print('Initialzing with', arg)
+
+def on_get(self, request, response):
+        print([n for n in dir(request) if not n.startswith('_')])
+        print([n for n in dir(response) if not n.startswith('_')])
+        response.status = falcon.HTTP_200
+        response.content_type = 'application/text'
+        response.body = 'Hello, world!'
+
+
+app = falcon.API()
+app.add_route('/', HelloResource(1))
+```
+
+This application uses Falcon and adds a few features over the original
+```Hello, world```. Namely:
+
+* prints out the members of the request object
+* prints out the members of the response object
+* sets the HTTP status and content-type
+* defines only the GET method
+* responds with ```Hello``` only on the ```/``` route
+* demonstrates trivial responder initialization
+
+Let's see it in action. Load up ```hello_falcon``` in ```gunicorn```
+and get ready to ```HTTPie```!
+
+```
+$ http get localhost:8000/
+```
+
+```http
+HTTP/1.1 200 OK
+Connection: close
+Date: Thu, 06 Feb 2014 06:50:32 GMT
+Server: gunicorn/18.0
+content-length: 13
+content-type: application/text
+
+Hello, world!
+```
+
+```
+$ http get localhost:8000/notfound
+```
+
+```http
+HTTP/1.1 404 Not Found
+Connection: close
+Date: Thu, 06 Feb 2014 06:50:55 GMT
+Server: gunicorn/18.0
+content-length: 0
+```
+
+```
+$ http post localhost:8000/
+```
+
+```http
+HTTP/1.1 405 Method Not Allowed
+Connection: close
+Date: Thu, 06 Feb 2014 06:51:42 GMT
+Server: gunicorn/18.0
+allow: GET, OPTIONS
+content-length: 0
+```
+
+On the gunicorn console, we'll see the following output:
+
+```python
+['accept', 'app', 'auth', 'client_accepts', 'client_accepts_json',
+ 'client_accepts_xml', 'client_prefers', 'content_length',
+ 'content_type', 'date', 'env', 'expect', 'get_header',
+ 'get_param', 'get_param_as_bool', 'get_param_as_int',
+ 'get_param_as_list', 'headers', 'if_match',
+ 'if_modified_since', 'if_none_match', 'if_range',
+ 'if_unmodified_since', 'log_error', 'method', 'path',
+ 'protocol', 'query_string', 'range', 'relative_uri',
+ 'stream', 'uri', 'url', 'user_agent']
+['body', 'body_encoded', 'cache_control', 'content_location',
+ 'content_range', 'content_type', 'data', 'etag',
+ 'last_modified', 'location', 'retry_after',
+ 'set_header', 'set_headers', 'status', 'stream',
+ 'stream_len', 'vary']
+```
+
+The first list are the methods for the ```Request``` object. The
+second list shows the members of the ```Response``` object. I won't go
+into detail in this guide. The takeaway is:
+
+* Make the most of exploring your framework of choice
+    * Use prints
+    * Use the python REPL, if you can
+    * Read the Docs
+
+Using a WSGI framework makes it much easier to grow your web
+application. Best practice here: use a WSGI framework.
+
+#### WSGI Middleware
+
+\  
+
+A lesser known and slightly more advanced feature of the WSGI protocol
+is that you can wrap a WSGI application in another WSGI
+application. It's
+[functional composition](http://mathieularose.com/function-composition-in-python/). This
+allows you to add features on top of an existing WSGI application in a
+modular fashion.
+
+As an example, let's add logging for ```x-project-id```s:
+
+```python
+from __future__ import print_function
+import uuid
+
+import falcon
+
+
+# This is the WSGI middleware
+def wraps(app):
+    print('Initializing middleware...')
+    def logger(env, start_response):
+        print(env.get('HTTP_X_PROJECT_ID'))
+        return app(env, start_response)
+    return logger
+
+
+# as before
+class HelloResource(object):
+    def __init__(self, arg):
+        print('Initialzing with', arg)
+
+def on_get(self, request, response):
+        response.status = falcon.HTTP_200
+        response.content_type = 'application/text'
+        response.body = 'Hello, world!'
+
+
+app = falcon.API()
+app.add_route('/', HelloResource(1))
+app = wraps(app)
+```
+
+This gives our WSGI app the ability to "log" the x-project-id sent
+with a request. Let's give it a try:
+
+```
+$ http get localhost:8000/
+...
+$ http get localhost:8000/ x-project-id:awesome_user
+```
+
+Over on the gunicorn console:
+
+```
+None
+awesome_user
+```
+
+The key takeaway here:
+
+* Think of middleware as function composition
+    * Each layer can add a new feature to your application w/o tight coupling
 
 ## Welcome to Openstack {#openstack}
 
