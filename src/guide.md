@@ -1115,6 +1115,7 @@ Some WSGI frameworks include:
 * [pecan](http://pecanpy.org/)
 * [django](http://www.djangoproject.com/)
 * [flask](http://flask.pocoo.org/)
+* [pyramid](http://www.pylonsproject.org/)
 
 They vary in the spectrum of tools that they provide. Some, like
 Django, are more full-stack oriented, coming with many built-ins
