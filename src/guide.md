@@ -1141,7 +1141,7 @@ class HelloResource(object):
     def __init__(self, arg):
         print('Initialzing with', arg)
 
-def on_get(self, request, response):
+    def on_get(self, request, response):
         print([n for n in dir(request) if not n.startswith('_')])
         print([n for n in dir(response) if not n.startswith('_')])
         response.status = falcon.HTTP_200
