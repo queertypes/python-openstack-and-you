@@ -1,6 +1,6 @@
 % Python, Openstack, and You
-% Alejandro Cabrera (@cppcabrera, irc: alcabrera)
-% February 4, 2014
+% Allele Dev (@queertypes, irc: alleledev)
+% February 4, 2016
 
 \pagebreak
 
@@ -33,7 +33,7 @@ Namespaces are one honking great idea -- let's do more of those!
 
 ![](cc-by-sa.png "CC-BY-SA 4.0")
 
-Python, Openstack, and You by Alejandro Cabrera is licensed under a
+Python, Openstack, and You by Allele Dev is licensed under a
 Creative Commons Attribution-ShareAlike 4.0 International License.
 
 \pagebreak
@@ -74,9 +74,9 @@ good in this area.
 ### Contributing
 
 Enjoy the guide! Reach out to me at
-@[cppcabrera](http://twitter.com/cppcabrera) or on freenode:alcabrera
+@[queertypes](http://twitter.com/queertypes) or on freenode:alleledev
 if you'd like to give feedback, or fork away and send
-[pull requests](https://github.com/cabrera/python-openstack-and-you)!
+[pull requests](https://github.com/queertypes/python-openstack-and-you)!
 
 \newpage
 
@@ -401,7 +401,7 @@ Installing collected packages: pep8
   Running setup.py install for pep8
 
     no previously-included directories found matching 'docs/_build'
-    Installing pep8 script to /home/alejandro/.venv/27/bin
+    Installing pep8 script to /home/allele/.venv/27/bin
 Successfully installed pep8
 Cleaning up...
 ```
@@ -475,7 +475,7 @@ New python executable in python_and_you/bin/python
 Installing Setuptools...done.
 Installing Pip..........done.
 $ . ./python_and_you/bin/activate
-(python_and_you)$ 
+(python_and_you)$
 ```
 
 That's all it takes. You know you're in a virtualenv context by
@@ -520,7 +520,7 @@ $ ipython
 ```
 
 ```python
-Python 2.7.5 (default, Aug  8 2013, 17:09:46) 
+Python 2.7.5 (default, Aug  8 2016, 17:09:46)
 Type "copyright", "credits" or "license" for more information.
 
 IPython 1.1.0 -- An enhanced Interactive Python.
@@ -529,7 +529,7 @@ IPython 1.1.0 -- An enhanced Interactive Python.
 help      -> Python's own help system.
 object?   -> Details about 'object', use 'object??' for extra details.
 
-In [1]: 
+In [1]:
 ```
 
 \newpage
@@ -547,20 +547,20 @@ Let's find out what lives in the urllib module:
 In [2]: import urllib
 
 In [3]: urllib.<tab>
-urllib.ContentTooShortError      urllib.ftpwrapper            
-urllib.FancyURLopener            urllib.getproxies            
+urllib.ContentTooShortError      urllib.ftpwrapper
+urllib.FancyURLopener            urllib.getproxies
 urllib.MAXFTPCACHE               urllib.getproxies_environment
-urllib.URLopener                 urllib.i                     
-urllib.addbase                   urllib.localhost             
-urllib.addclosehook              urllib.noheaders             
-urllib.addinfo                   urllib.os                    
-urllib.addinfourl                urllib.pathname2url          
-urllib.always_safe               urllib.proxy_bypass          
+urllib.URLopener                 urllib.i
+urllib.addbase                   urllib.localhost
+urllib.addclosehook              urllib.noheaders
+urllib.addinfo                   urllib.os
+urllib.addinfourl                urllib.pathname2url
+urllib.always_safe               urllib.proxy_bypass
 urllib.base64                    urllib.proxy_bypass_environment
-urllib.basejoin                  urllib.quote                 
-urllib.c                         urllib.quote_plus            
-urllib.ftpcache                  urllib.re                    
-urllib.ftperrors                 urllib.reporthook            
+urllib.basejoin                  urllib.quote
+urllib.c                         urllib.quote_plus
+urllib.ftpcache                  urllib.re
+urllib.ftperrors                 urllib.reporthook
 
 In [3]: urllib.URL<tab>
 In [3]: urllib.URLopener
@@ -786,8 +786,8 @@ from __future__ import print_function
 print('My', 'data', file=sys.stderr)
 ```
 
-#### Unicode Literals {#unicode-literals}  
-\  
+#### Unicode Literals {#unicode-literals}
+\
 
 String-like data handling is one of the most common causes of
 incompatibilities between Python 2 and 3.
@@ -1001,10 +1001,10 @@ That's it. That's the minimum WSGI application. To run it:
 
 ```bash
 $ gunicorn hello:app
-2014-02-06 01:18:18 [12476] [INFO] Starting gunicorn 18.0
-2014-02-06 01:18:18 [12476] [INFO] Listening at: http://127.0.0.1:8000 (12476)
-2014-02-06 01:18:18 [12476] [INFO] Using worker: sync
-2014-02-06 01:18:18 [12481] [INFO] Booting worker with pid: 12481
+2016-02-06 01:18:18 [12476] [INFO] Starting gunicorn 18.0
+2016-02-06 01:18:18 [12476] [INFO] Listening at: http://127.0.0.1:8000 (12476)
+2016-02-06 01:18:18 [12476] [INFO] Using worker: sync
+2016-02-06 01:18:18 [12481] [INFO] Booting worker with pid: 12481
 ```
 
 Let's interact!
@@ -1016,7 +1016,7 @@ $ http get localhost:8000
 ```http
 HTTP/1.1 200 OK
 Connection: close
-Date: Thu, 06 Feb 2014 06:19:36 GMT
+Date: Thu, 06 Feb 2016 06:19:36 GMT
 Server: gunicorn/18.0
 Transfer-Encoding: chunked
 
@@ -1173,7 +1173,7 @@ $ http get localhost:8000/
 ```http
 HTTP/1.1 200 OK
 Connection: close
-Date: Thu, 06 Feb 2014 06:50:32 GMT
+Date: Thu, 06 Feb 2016 06:50:32 GMT
 Server: gunicorn/18.0
 content-length: 13
 content-type: application/text
@@ -1188,7 +1188,7 @@ $ http get localhost:8000/notfound
 ```http
 HTTP/1.1 404 Not Found
 Connection: close
-Date: Thu, 06 Feb 2014 06:50:55 GMT
+Date: Thu, 06 Feb 2016 06:50:55 GMT
 Server: gunicorn/18.0
 content-length: 0
 ```
@@ -1200,7 +1200,7 @@ $ http post localhost:8000/
 ```http
 HTTP/1.1 405 Method Not Allowed
 Connection: close
-Date: Thu, 06 Feb 2014 06:51:42 GMT
+Date: Thu, 06 Feb 2016 06:51:42 GMT
 Server: gunicorn/18.0
 allow: GET, OPTIONS
 content-length: 0
@@ -1241,7 +1241,7 @@ application. Best practice here: use a WSGI framework.
 
 #### WSGI Middleware
 
-\  
+\
 
 A lesser known and slightly more advanced feature of the WSGI protocol
 is that you can wrap a WSGI application in another WSGI
